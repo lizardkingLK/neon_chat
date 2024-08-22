@@ -10,8 +10,29 @@ generator client {
 
 // prisma/schema.prisma
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
   // uncomment next line if you use Prisma <5.10
   // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id      Int       @id @default(autoincrement())
+  Message Message[]
+  Group   Group[]
+}
+
+model Message {
+  id       Int    @id @default(autoincrement())
+  Content  String
+  Group    Group  @relation(fields: [groupId], references: [id])
+  groupId  Int
+  Author   User   @relation(fields: [authorId], references: [id])
+  authorId Int
+}
+
+model Group {
+  id      Int       @id @default(autoincrement())
+  users   User[]
+  Message Message[]
 }
