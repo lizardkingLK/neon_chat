@@ -21,15 +21,51 @@ export default function Chat() {
     <main className="min-h-screen">
       <AblyProvider client={client}>
         <ChannelProvider channelName="get-started">
-          <AblyPubSub />
+          <ChatScreen />
         </ChannelProvider>
       </AblyProvider>
     </main>
   );
 }
 
-function AblyPubSub() {
+type UserState = {
+  id: number;
+  firstName: string;
+};
+
+type ChatMessageState = {
+  content: string;
+  createdOn: string;
+  createdBy: UserState;
+};
+
+const dateFormatterOptions: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+};
+
+const ChatMessage = ({ content, createdOn, createdBy }: ChatMessageState) => {
+  return (
+    <div className="m-4">
+      <p className="bg-secondary text-primary p-4 rounded-sm">{content}</p>
+      <div className="flex justify-end">
+        <small className="text-gray-500">
+          @{createdBy.firstName}{" "}
+          {new Date(createdOn).toLocaleString("en-us", dateFormatterOptions)}
+        </small>
+      </div>
+    </div>
+  );
+};
+
+function ChatScreen() {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [user, setUser] = useState<UserState>({
+    id: 1,
+    firstName: "Sandeep",
+  });
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Ably.Message[]>([]);
 
@@ -52,7 +88,11 @@ function AblyPubSub() {
   const handleSave = async () => {};
 
   const handleSend = () => {
-    channel.publish("first", messageText);
+    channel.publish("first", {
+      content: messageText,
+      createdOn: new Date().toDateString(),
+      createdBy: user,
+    } as ChatMessageState);
   };
 
   const handleRender = () => {
@@ -73,25 +113,18 @@ function AblyPubSub() {
       </div>
       <ScrollArea className="h-[calc(70vh)] whitespace-nowrap rounded-md border mx-4">
         <ul>
-          <li className="m-4">
-            <p className="bg-secondary text-primary p-4 rounded-sm">
-              Hello Brother
-            </p>
-            <div className="flex justify-end">
-              <small className="text-gray-500">
-                @Sandeep{" "}
-                {new Date().toLocaleString("en-us", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </small>
-            </div>
+          <li>
+            <ChatMessage
+              content="Hello Brother"
+              createdBy={user}
+              createdOn={new Date().toDateString()}
+            />
           </li>
           {messages.map((message) => {
+            const chatMessageData = message.data as ChatMessageState;
             return (
-              <li key={message.id} className="p-4 m-4">
-                <p>{message.data}</p>
+              <li key={message.id}>
+                <ChatMessage {...chatMessageData} />
               </li>
             );
           })}
