@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as Ably from "ably";
 import {
   AblyProvider,
@@ -12,6 +12,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { User } from "@clerk/nextjs/server";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// read only vars
+const messageEvent = "first";
+const defaultChannel = "get-started";
 
 const client = new Ably.Realtime({
   key: process.env.NEXT_PUBLIC_ABLY_API_KEY,
@@ -21,7 +27,7 @@ export default function Chat() {
   return (
     <main>
       <AblyProvider client={client}>
-        <ChannelProvider channelName="get-started">
+        <ChannelProvider channelName={defaultChannel}>
           <ChatScreen />
         </ChannelProvider>
       </AblyProvider>
@@ -29,15 +35,21 @@ export default function Chat() {
   );
 }
 
+type GroupState = {
+  groupId: string;
+  name: string;
+};
+
 type UserState = {
-  id: number;
-  firstName: string;
+  id: string;
+  username: string;
 };
 
 type ChatMessageState = {
   content: string;
   createdOn: string;
   createdBy: UserState;
+  group: GroupState;
 };
 
 const dateFormatterOptions: Intl.DateTimeFormatOptions = {
@@ -50,9 +62,9 @@ const ChatMessage = ({ content, createdOn, createdBy }: ChatMessageState) => {
   return (
     <div className="m-4">
       <p className="bg-secondary text-primary p-4 rounded-sm">{content}</p>
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-2">
         <small className="text-gray-500">
-          @{createdBy.firstName}{" "}
+          @{createdBy.username}{" "}
           {new Date(createdOn).toLocaleString("en-us", dateFormatterOptions)}
         </small>
       </div>
@@ -61,50 +73,111 @@ const ChatMessage = ({ content, createdOn, createdBy }: ChatMessageState) => {
 };
 
 function ChatScreen() {
+  // ref vars
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [user, setUser] = useState<UserState>({
-    id: 1,
-    firstName: "Sandeep",
-  });
+  // state vars
+  const [isLoading, setLoading] = useState(true);
+  const [group, setGroup] = useState<GroupState | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Ably.Message[]>([]);
+
+  const loadUser = () => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user) {
+          setUser(data?.user);
+        }
+      });
+  };
+
+  const loadMessages = (data: GroupState) => {
+    fetch("/api/groups", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.group) {
+          setGroup(data?.group);
+        }
+      });
+  };
+
+  useEffect(() => {
+    loadUser();
+    loadMessages({
+      groupId: "N_CHAT",
+      name: "NEON CHAT",
+    });
+    setLoading(false);
+  }, []);
 
   useConnectionStateListener("connected", () => {
     console.log("Connected to Ably!");
   });
 
-  // Create a channel called 'get-started' and subscribe to all messages with the name 'first' using the useChannel hook
-  const { channel } = useChannel("get-started", "first", (message) => {
+  // Create a channel called defaultChannel and subscribe to all messages with the name 'first' using the useChannel hook
+  const { channel } = useChannel(defaultChannel, messageEvent, (message) => {
     setMessages((previousMessages) => [...previousMessages, message]);
   });
 
   const handlePublish = async () => {
-    handleSave();
-    handleSend();
+    handleMessage();
     handleRender();
     handleClear();
   };
 
-  const handleSave = async () => {};
+  const handleMessage = async () => {
+    if (!user?.username) {
+      console.log("error. username invalid");
+      return;
+    }
 
-  const handleSend = () => {
-    channel.publish("first", {
+    const message = {
       content: messageText,
       createdOn: new Date().toDateString(),
-      createdBy: user,
-    } as ChatMessageState);
+      createdBy: { id: user.id, username: user.username },
+      group,
+    } as ChatMessageState;
+
+    fetch("/api/messages", {
+      method: "POST",
+      body: JSON.stringify(message),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.message) {
+          handleSend(message);
+        }
+      });
+  };
+
+  const handleSend = (message: ChatMessageState) => {
+    channel.publish(messageEvent, message);
   };
 
   const handleRender = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView();
+      scrollRef.current.scrollIntoView({ block: "end", behavior: "smooth" });
     }
   };
 
   const handleClear = () => {
     setMessageText("");
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col space-y-4">
+        <Skeleton className="h-[calc(70vh)] whitespace-nowrap rounded-md border mx-4" />
+        <Skeleton className="h-[calc(10vh)] mx-4 min-w-max mt-4" />
+        <Skeleton className="h-[calc(5vh)] mx-4 min-w-max mt-4" />
+      </div>
+    );
+  }
 
   return (
     // Publish a message with the name 'first' and the contents 'Here is my first message!' when the 'Publish' button is clicked
@@ -123,15 +196,18 @@ function ChatScreen() {
         </ul>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      <div className="mx-4 min-w-max mt-4 bottom-4">
+      <div className="mx-4 min-w-max mt-4">
         <Textarea
           placeholder="Type your message here."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
         />
       </div>
-      <div className="mx-4 mt-4 bottom-4">
-        <Button className={cn("w-full", buttonVariants({variant: "secondary"}))} onClick={handlePublish}>
+      <div className="mx-4 mt-4">
+        <Button
+          className={cn("w-full", buttonVariants({ variant: "secondary" }))}
+          onClick={handlePublish}
+        >
           Send
         </Button>
       </div>

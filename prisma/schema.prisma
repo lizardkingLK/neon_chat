@@ -18,6 +18,7 @@ datasource db {
 
 model User {
   id      Int       @id @default(autoincrement())
+  userId  String    @unique
   Message Message[]
   Group   Group[]
 }
@@ -33,6 +34,8 @@ model Message {
 
 model Group {
   id      Int       @id @default(autoincrement())
+  groupId String    @unique
+  name    String
   users   User[]
   Message Message[]
 }
