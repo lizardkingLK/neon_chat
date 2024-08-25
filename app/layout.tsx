@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar/navbar";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/themes/ThemeProvider";
 
 const robotoMono = Roboto_Mono({ subsets: ["latin"] });
@@ -17,20 +18,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={robotoMono.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="w-full">
-            {<Navbar />}
-            {children}
-          </div>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={robotoMono.className}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="w-full">
+              {<Navbar />}
+              {children}
+            </div>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
