@@ -17,10 +17,11 @@ datasource db {
 }
 
 model User {
-  id      Int       @id @default(autoincrement())
-  userId  String    @unique
-  Message Message[]
-  Group   Group[]
+  id       Int       @id @default(autoincrement())
+  userId   String    @unique
+  username String    @unique
+  Message  Message[]
+  Group    Group[]
 }
 
 model Message {

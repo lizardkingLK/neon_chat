@@ -15,7 +15,8 @@ export async function GET() {
     where: { userId: user.id },
   });
   if (!userRecord) {
-    await prisma.user.create({ data: { userId: user.id } });
+    const username = user.username ?? `${user.firstName}${user.lastName}${user.id}`
+    await prisma.user.create({ data: { userId: user.id, username } });
   }
 
   return NextResponse.json({ user }, { status: 200 });
