@@ -181,7 +181,7 @@ function ChatScreen() {
 
     const message = {
       content: messageText,
-      createdOn: new Date().getMilliseconds(),
+      createdOn: new Date().getTime(),
       createdBy: { id: user.id, username: user.username },
       group,
     } as ChatMessageState;
