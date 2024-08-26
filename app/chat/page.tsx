@@ -54,7 +54,7 @@ type GetGroupResponse = {
   } & {
     id: number;
     content: string;
-    createdOn: number;
+    createdOn: string;
     groupId: number;
     authorId: number;
   })[];
@@ -76,7 +76,7 @@ type UserState = {
 
 type ChatMessageState = {
   content: string;
-  createdOn: number;
+  createdOn: string;
   createdBy: UserState;
   group: GroupState;
 };
@@ -94,7 +94,10 @@ const ChatMessage = ({ content, createdOn, createdBy }: ChatMessageState) => {
       <div className="flex justify-end mt-2">
         <small className="text-gray-500">
           @{createdBy.username}{" "}
-          {new Date(createdOn).toLocaleString("en-us", dateFormatterOptions)}
+          {new Date(Number(createdOn)).toLocaleString(
+            "en-us",
+            dateFormatterOptions
+          )}
         </small>
       </div>
     </div>
@@ -181,7 +184,7 @@ function ChatScreen() {
 
     const message = {
       content: messageText,
-      createdOn: new Date().getTime(),
+      createdOn: new Date().getTime().toString(),
       createdBy: { id: user.id, username: user.username },
       group,
     } as ChatMessageState;
