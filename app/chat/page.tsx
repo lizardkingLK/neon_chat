@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { User } from "@clerk/nextjs/server";
 import { Skeleton } from "@/components/ui/skeleton";
+import CustomTooltip from "@/components/tooltip";
+import Link from "next/link";
 
 // read only vars
 const messageEvent = "first";
@@ -87,17 +89,36 @@ const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   day: "numeric",
 };
 
+const timeFormatterOptions: Intl.DateTimeFormatOptions = {
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
 const ChatMessage = ({ content, createdOn, createdBy }: ChatMessageState) => {
+  const createdOnDate = new Date(Number(createdOn));
+
   return (
     <div className="m-4">
       <p className="bg-secondary text-primary p-4 rounded-sm">{content}</p>
       <div className="flex justify-end mt-2">
         <small className="text-gray-500">
-          @{createdBy.username}{" "}
-          {new Date(Number(createdOn)).toLocaleString(
-            "en-us",
-            dateFormatterOptions
-          )}
+          <Link target="_blank" href={`/profile/${createdBy.username}`}>
+            <span className="hover:text-primary transition delay-50">
+              @{createdBy.username}
+            </span>
+          </Link>{" "}
+          <CustomTooltip
+            trigger={
+              <span className="hover:text-primary transition delay-50">
+                {createdOnDate.toLocaleString("en-us", dateFormatterOptions)}
+              </span>
+            }
+            content={
+              <span>
+                {createdOnDate.toLocaleString("en-us", timeFormatterOptions)}
+              </span>
+            }
+          />
         </small>
       </div>
     </div>
