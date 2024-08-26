@@ -27,7 +27,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="h-screen w-full md:w-1/2 md:absolute md:left-1/2 md:-translate-x-1/2">
+            <div className="h-screen w-full lg:w-1/3 md:w-1/2 md:absolute md:left-1/2 md:-translate-x-1/2">
               {<Navbar />}
               {children}
             </div>

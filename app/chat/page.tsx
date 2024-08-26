@@ -115,8 +115,8 @@ function ChatScreen() {
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<Ably.Message[]>([]);
 
-  const loadUser = () => {
-    fetch("/api/users")
+  const loadUser = async () => {
+    await fetch("/api/users")
       .then((res) => res.json())
       .then((data) => {
         if (data?.user) {
@@ -125,8 +125,8 @@ function ChatScreen() {
       });
   };
 
-  const loadMessages = (data: GroupState) => {
-    fetch("/api/groups", {
+  const loadMessages = async (data: GroupState) => {
+    await fetch("/api/groups", {
       method: "POST",
       body: JSON.stringify(data),
     })
@@ -156,9 +156,13 @@ function ChatScreen() {
   };
 
   useEffect(() => {
-    loadUser();
-    loadMessages(defaultGroup);
-    setLoading(false);
+    const initialize = async () => {
+      await loadUser();
+      await loadMessages(defaultGroup);
+      setLoading(false);
+    };
+
+    initialize();
   }, []);
 
   useConnectionStateListener("connected", () => {
