@@ -20,6 +20,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+      <link
+        rel="icon"
+        href="/favicon.png"
+        type="image/png"
+        sizes="any"
+      />
         <body className={robotoMono.className}>
           <ThemeProvider
             attribute="class"
