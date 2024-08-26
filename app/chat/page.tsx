@@ -18,6 +18,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 // read only vars
 const messageEvent = "first";
 const defaultChannel = "get-started";
+const defaultGroup = {
+  groupId: "N_CHAT",
+  name: "NEON CHAT",
+};
 
 const client = new Ably.Realtime({
   key: process.env.NEXT_PUBLIC_ABLY_API_KEY,
@@ -34,6 +38,30 @@ export default function Chat() {
     </main>
   );
 }
+
+type GetGroupResponse = {
+  Message: ({
+    Author: {
+      id: number;
+      userId: string;
+      username: string;
+    };
+    Group: {
+      id: number;
+      groupId: string;
+      name: string;
+    };
+  } & {
+    id: number;
+    Content: string;
+    groupId: number;
+    authorId: number;
+  })[];
+} & {
+  id: number;
+  groupId: string;
+  name: string;
+};
 
 type GroupState = {
   groupId: string;
@@ -101,17 +129,31 @@ function ChatScreen() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.group) {
-          setGroup(data?.group);
+          const group: GetGroupResponse = data?.group;
+          setGroup(group);
+
+          const groupMessages: ChatMessageState[] = group.Message.map(
+            (item) => ({
+              content: item.Content,
+              createdBy: {
+                id: item.Author.userId,
+                username: item.Author.username,
+              },
+              createdOn: new Date().toString(),
+              group: {
+                groupId: group.groupId,
+                name: group.name,
+              },
+            })
+          );
+          setMessages(groupMessages.map((item) => ({ data: item })));
         }
       });
   };
 
   useEffect(() => {
     loadUser();
-    loadMessages({
-      groupId: "N_CHAT",
-      name: "NEON CHAT",
-    });
+    loadMessages(defaultGroup);
     setLoading(false);
   }, []);
 

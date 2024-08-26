@@ -23,11 +23,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const includeArgs: any = {
+    Message: {
+      include: {
+        Author: true,
+        Group: true,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      take: 5,
+    },
+  };
   let group = await prisma.group.findUnique({
     where: { groupId },
+    include: includeArgs,
   });
   if (!group) {
-    group = await prisma.group.create({ data: { groupId, name } });
+    group = await prisma.group.create({
+      data: { groupId, name },
+      include: includeArgs,
+    });
   }
 
   return NextResponse.json({ group }, { status: 200 });
