@@ -21,7 +21,7 @@ type UserState = {
 
 type ChatMessageState = {
   content: string;
-  createdOn: number;
+  createdOn: string;
   createdBy: UserState;
   group: GroupState;
 };
