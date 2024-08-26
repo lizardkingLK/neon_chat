@@ -53,7 +53,8 @@ type GetGroupResponse = {
     };
   } & {
     id: number;
-    Content: string;
+    content: string;
+    createdOn: number;
     groupId: number;
     authorId: number;
   })[];
@@ -75,7 +76,7 @@ type UserState = {
 
 type ChatMessageState = {
   content: string;
-  createdOn: string;
+  createdOn: number;
   createdBy: UserState;
   group: GroupState;
 };
@@ -134,12 +135,12 @@ function ChatScreen() {
 
           const groupMessages: ChatMessageState[] = group.Message.map(
             (item) => ({
-              content: item.Content,
+              content: item.content,
               createdBy: {
                 id: item.Author.userId,
                 username: item.Author.username,
               },
-              createdOn: new Date().toString(),
+              createdOn: item.createdOn,
               group: {
                 groupId: group.groupId,
                 name: group.name,
@@ -180,7 +181,7 @@ function ChatScreen() {
 
     const message = {
       content: messageText,
-      createdOn: new Date().toDateString(),
+      createdOn: new Date().getMilliseconds(),
       createdBy: { id: user.id, username: user.username },
       group,
     } as ChatMessageState;

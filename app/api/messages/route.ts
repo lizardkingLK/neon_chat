@@ -21,7 +21,7 @@ type UserState = {
 
 type ChatMessageState = {
   content: string;
-  createdOn: string;
+  createdOn: number;
   createdBy: UserState;
   group: GroupState;
 };
@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
 
   const message = await prisma.message.create({
     data: {
-      Content: content,
+      content,
+      createdOn,
       authorId: userRecord?.id,
       groupId: groupRecord?.id,
     },
