@@ -16,6 +16,7 @@ import { User } from "@clerk/nextjs/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import CustomTooltip from "@/components/tooltip";
 import Link from "next/link";
+import { ChatMessageState, GetGroupResponse, GroupState } from "@/types/client";
 
 // read only vars
 const messageEvent = "first";
@@ -40,48 +41,6 @@ export default function Chat() {
     </main>
   );
 }
-
-type GetGroupResponse = {
-  Message: ({
-    Author: {
-      id: number;
-      userId: string;
-      username: string;
-    };
-    Group: {
-      id: number;
-      groupId: string;
-      name: string;
-    };
-  } & {
-    id: number;
-    content: string;
-    createdOn: string;
-    groupId: number;
-    authorId: number;
-  })[];
-} & {
-  id: number;
-  groupId: string;
-  name: string;
-};
-
-type GroupState = {
-  groupId: string;
-  name: string;
-};
-
-type UserState = {
-  id: string;
-  username: string;
-};
-
-type ChatMessageState = {
-  content: string;
-  createdOn: string;
-  createdBy: UserState;
-  group: GroupState;
-};
 
 const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -159,6 +118,7 @@ function ChatScreen() {
 
           const groupMessages: ChatMessageState[] = group.Message.map(
             (item) => ({
+              messageId: item.id.toString(),
               content: item.content,
               createdBy: {
                 id: item.Author.userId,
@@ -171,7 +131,7 @@ function ChatScreen() {
               },
             })
           );
-          setMessages(groupMessages.map((item) => ({ data: item })));
+          setMessages(groupMessages.map((item) => ({ userId: item.messageId, data: item })));
         }
       });
   };
@@ -194,6 +154,12 @@ function ChatScreen() {
   const { channel } = useChannel(defaultChannel, messageEvent, (message) => {
     setMessages((previousMessages) => [...previousMessages, message]);
   });
+
+  
+// const { unsubscribe } = channel.presence.subscribe((event) => {
+//   console.log(`${event.clientId} entered with data: ${event.data}`);
+// });
+
 
   const handlePublish = async () => {
     handleMessage();
@@ -258,7 +224,7 @@ function ChatScreen() {
           {messages.map((message) => {
             const chatMessageData = message.data as ChatMessageState;
             return (
-              <li key={message.id}>
+              <li key={chatMessageData.messageId}>
                 <ChatMessage {...chatMessageData} />
               </li>
             );
