@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import { ThemeSwitch } from "../themes/ThemeSwitch";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, UserButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   return (
@@ -13,10 +13,7 @@ const Navbar = () => {
       </div>
       <div className="flex space-x-4 items-center">
         <ThemeSwitch />
-        <SignedOut>
-          <SignInButton />
-        </SignedOut>
-        <SignedIn>
+        <SignedIn >
           <UserButton />
         </SignedIn>
       </div>
