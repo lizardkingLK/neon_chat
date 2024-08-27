@@ -7,20 +7,20 @@ import {
   usePresence,
   usePresenceListener,
 } from "ably/react";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect,  useRef, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
 import { Textarea } from "../ui/textarea";
 import { Button, buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
-import ChatOnlineContext from "./ChatOnlineContext";
+import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
 
 // read only vars
 const messageEvent = "first";
 const defaultChannel = "get-started";
 const stringEmpty = "";
-const activePresence = ["enter", "update"];
+const activePresence = ["enter", "present", "update"];
 const defaultGroup = {
   groupId: "N_CHAT",
   name: "NEON CHAT",
@@ -38,7 +38,9 @@ function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   // global state vars
-  const onlineContext = useContext(ChatOnlineContext);
+  const presenceSet = useOnlineSetStore((state) => state.onlineSet)
+  const insertPresence = useOnlineSetStoreManager((state) => state.insert);
+  const deletePresence = useOnlineSetStoreManager((state) => state.delete);
 
   const loadUser = async () => {
     await fetch("/api/users")
@@ -77,7 +79,7 @@ function ChatScreen() {
             })
           );
           setMessages(
-            groupMessages.map((item) => ({
+            groupMessages.reverse().map((item) => ({
               userId: item.messageId,
               data: item,
             }))
@@ -88,10 +90,14 @@ function ChatScreen() {
 
   const handlePresenceChange = (presenceData: PresenceMessage) => {
     const { action, clientId } = presenceData;
-    if (activePresence.includes(action) && !onlineContext.includes(clientId)) {
-      console.log(`${clientId} is online. to be added to array`);
-    } else if (!activePresence.includes(action) && onlineContext.includes(clientId)) {
-      console.log(`${clientId} is offline. to be removed from array`);
+
+    if (activePresence.includes(action) && !presenceSet.includes(clientId)) {
+      insertPresence(clientId);
+    } else if (
+      !activePresence.includes(action) &&
+      presenceSet.includes(clientId)
+    ) {
+      deletePresence(clientId);
     }
   };
 
