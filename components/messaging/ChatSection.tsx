@@ -7,13 +7,14 @@ import {
   usePresence,
   usePresenceListener,
 } from "ably/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
 import { Textarea } from "../ui/textarea";
 import { Button, buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
+import ChatOnlineContext from "./ChatOnlineContext";
 
 // read only vars
 const messageEvent = "first";
@@ -35,6 +36,9 @@ function ChatScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [messageText, setMessageText] = useState(stringEmpty);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // global state vars
+  const onlineContext = useContext(ChatOnlineContext);
 
   const loadUser = async () => {
     await fetch("/api/users")
@@ -84,8 +88,10 @@ function ChatScreen() {
 
   const handlePresenceChange = (presenceData: PresenceMessage) => {
     const { action, clientId } = presenceData;
-    if (activePresence.includes(action)) {
-      console.log(`${clientId} is online`);
+    if (activePresence.includes(action) && !onlineContext.includes(clientId)) {
+      console.log(`${clientId} is online. to be added to array`);
+    } else if (!activePresence.includes(action) && onlineContext.includes(clientId)) {
+      console.log(`${clientId} is offline. to be removed from array`);
     }
   };
 

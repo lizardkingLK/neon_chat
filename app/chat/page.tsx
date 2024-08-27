@@ -2,6 +2,7 @@
 
 import React from 'react'
 import dynamic from 'next/dynamic';
+import ChatOnlineContext from '@/components/messaging/ChatOnlineContext';
 
 const Messaging = dynamic(() => import('@/components/messaging'), {
   ssr: false,
@@ -9,7 +10,9 @@ const Messaging = dynamic(() => import('@/components/messaging'), {
 
 const Chat = () => {
   return (
-    <Messaging />
+    <ChatOnlineContext.Provider value={[]}>
+      <Messaging />
+    </ChatOnlineContext.Provider>
   )
 }
 
