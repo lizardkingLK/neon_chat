@@ -34,7 +34,7 @@ const Profile = ({ params }: { params: { slug: string } }) => {
   if (isLoading) {
     return (
       <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center w-full m-4">
-        <Skeleton className="h-[calc(100px)] w-[calc(100px)] rounded-full" />
+        <Skeleton className="h-[calc(200px)] w-[calc(200px)] rounded-full" />
         <Skeleton className="h-8 w-[300px] mt-4" />
         <Skeleton className="h-8 w-[150px] mt-4" />
         <Skeleton className="h-8 w-[150px] mt-4" />
@@ -45,10 +45,11 @@ const Profile = ({ params }: { params: { slug: string } }) => {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center w-full m-4">
       <Image
+        className="rounded-full w-auto h-auto"
         src={user?.imageUrl ?? "/favicon.png"}
         alt={username}
-        width={100}
-        height={100}
+        width={200}
+        height={200}
       />
       <h1 className="text-4xl mt-4">{params.slug}</h1>
       <p className="mt-4 text-gray-500">

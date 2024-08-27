@@ -1,18 +1,26 @@
 import { ChatMessageState, GetGroupResponse, GroupState } from "@/types/client";
 import { User } from "@clerk/nextjs/server";
-import { Message } from "ably";
-import { useChannel, useConnectionStateListener } from "ably/react";
-import React, { useEffect, useRef, useState } from "react";
+import { Message, PresenceMessage } from "ably";
+import {
+  useChannel,
+  useConnectionStateListener,
+  usePresence,
+  usePresenceListener,
+} from "ably/react";
+import React, { useEffect,  useRef, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
 import { Textarea } from "../ui/textarea";
 import { Button, buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
 
 // read only vars
 const messageEvent = "first";
 const defaultChannel = "get-started";
+const stringEmpty = "";
+const activePresence = ["enter", "present", "update"];
 const defaultGroup = {
   groupId: "N_CHAT",
   name: "NEON CHAT",
@@ -26,8 +34,13 @@ function ChatScreen() {
   const [isLoading, setLoading] = useState(true);
   const [group, setGroup] = useState<GroupState | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [messageText, setMessageText] = useState("");
+  const [messageText, setMessageText] = useState(stringEmpty);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // global state vars
+  const presenceSet = useOnlineSetStore((state) => state.onlineSet)
+  const insertPresence = useOnlineSetStoreManager((state) => state.insert);
+  const deletePresence = useOnlineSetStoreManager((state) => state.delete);
 
   const loadUser = async () => {
     await fetch("/api/users")
@@ -66,7 +79,7 @@ function ChatScreen() {
             })
           );
           setMessages(
-            groupMessages.map((item) => ({
+            groupMessages.reverse().map((item) => ({
               userId: item.messageId,
               data: item,
             }))
@@ -75,6 +88,20 @@ function ChatScreen() {
       });
   };
 
+  const handlePresenceChange = (presenceData: PresenceMessage) => {
+    const { action, clientId } = presenceData;
+
+    if (activePresence.includes(action) && !presenceSet.includes(clientId)) {
+      insertPresence(clientId);
+    } else if (
+      !activePresence.includes(action) &&
+      presenceSet.includes(clientId)
+    ) {
+      deletePresence(clientId);
+    }
+  };
+
+  // Listen to connection status
   useConnectionStateListener("connected", () => {
     console.log("Connected to Ably!");
   });
@@ -84,18 +111,15 @@ function ChatScreen() {
     setMessages((previousMessages) => [...previousMessages, message]);
   });
 
-  // // Publishes presence evnet
-  // const presenceData = usePresence({
-  //   channelName: defaultChannel,
-  //   onChannelError: (error) => console.log({ error }),
-  //   onConnectionError: (error) => console.log({ error }),
-  // });
-  // console.log({presenceData})
+  // Publishes presence event
+  usePresence({
+    channelName: defaultChannel,
+    onChannelError: (error) => console.log({ error }),
+    onConnectionError: (error) => console.log({ error }),
+  });
 
-  // // Listens to presence events
-  // usePresenceListener(defaultChannel, (presenceData) => {
-  //   console.log({ presenceData });
-  // });
+  // Listens to presence events
+  usePresenceListener(defaultChannel, handlePresenceChange);
 
   const handlePublish = async () => {
     handleMessage();
@@ -139,7 +163,7 @@ function ChatScreen() {
   };
 
   const handleClear = () => {
-    setMessageText("");
+    setMessageText(stringEmpty);
   };
 
   useEffect(() => {
@@ -164,7 +188,7 @@ function ChatScreen() {
 
   return (
     // Publish a message with the name 'first' and the contents 'Here is my first message!' when the 'Publish' button is clicked
-    <div>
+    <section>
       <ScrollArea className="h-[calc(70vh)] whitespace-nowrap rounded-md border mx-4">
         <ul>
           {messages.map((message) => {
@@ -188,13 +212,14 @@ function ChatScreen() {
       </div>
       <div className="mx-4 mt-4">
         <Button
+          type="submit"
           className={cn("w-full", buttonVariants({ variant: "secondary" }))}
           onClick={handlePublish}
         >
           Send
         </Button>
       </div>
-    </div>
+    </section>
   );
 }
 

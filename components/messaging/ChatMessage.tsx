@@ -1,7 +1,9 @@
 import { ChatMessageState } from "@/types/client";
 import Link from "next/link";
-import React from "react";
+import React, { memo } from "react";
 import CustomTooltip from "../tooltip";
+import { cn } from "@/lib/utils";
+import { useOnlineSetStore } from "./ChatOnlineState";
 
 const dateFormatterOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -15,21 +17,29 @@ const timeFormatterOptions: Intl.DateTimeFormatOptions = {
 };
 
 function ChatMessage({ content, createdOn, createdBy }: ChatMessageState) {
+  // global state vars
+  const presenceSet = useOnlineSetStore((state) => state.onlineSet);
+
   const createdOnDate = new Date(Number(createdOn));
 
   return (
     <div className="m-4">
       <p className="bg-secondary text-primary p-4 rounded-sm">{content}</p>
       <div className="flex justify-end mt-2">
-        <small className="text-gray-500">
+        <small>
           <Link href={`/profile/${createdBy.username}`}>
-            <span className="hover:text-primary transition delay-50">
+            <span
+              className={cn(
+                presenceSet.includes(createdBy.username) && "text-green-500",
+                "hover:text-primary transition delay-50"
+              )}
+            >
               @{createdBy.username}
             </span>
           </Link>{" "}
           <CustomTooltip
             trigger={
-              <span className="hover:text-primary transition delay-50">
+              <span className="text-gray-500 hover:text-primary transition delay-50">
                 {createdOnDate.toLocaleString("en-us", dateFormatterOptions)}
               </span>
             }
@@ -45,4 +55,4 @@ function ChatMessage({ content, createdOn, createdBy }: ChatMessageState) {
   );
 }
 
-export default ChatMessage;
+export default memo(ChatMessage);

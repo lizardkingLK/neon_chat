@@ -6,18 +6,16 @@ import ChatSection from "./ChatSection";
 const defaultChannel = "get-started";
 
 const Messaging = () => {
-  const client = new Realtime({
-    key: process.env.NEXT_PUBLIC_ABLY_API_KEY,
-  });
+  const client = new Realtime({ authUrl: "/api/auth/messaging" });
 
   return (
-    <main>
+    <section>
       <AblyProvider client={client}>
         <ChannelProvider channelName={defaultChannel}>
           <ChatSection />
         </ChannelProvider>
       </AblyProvider>
-    </main>
+    </section>
   );
 };
 

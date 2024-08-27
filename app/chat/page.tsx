@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import React from 'react'
-import dynamic from 'next/dynamic';
+import React from "react";
+import dynamic from "next/dynamic";
 
-const Messaging = dynamic(() => import('@/components/messaging'), {
+const Messaging = dynamic(() => import("@/components/messaging"), {
   ssr: false,
 });
 
 const Chat = () => {
   return (
-    <Messaging />
-  )
-}
+      <Messaging />
+  );
+};
 
-export default Chat
+export default Chat;
