@@ -1,14 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import QRCode from "react-qr-code";
 
 const Index = () => {
+  const [url, setUrl] = useState<string>("");
+
+  useEffect(() => {
+    setUrl(`${window.location.href}chat`);
+  }, []);
+
   return (
     <main className="flex flex-col justify-center items-center space-y-4 h-[calc(90vh)]">
-      <QRCode value={`${window.location.href}chat`} />
+      <QRCode value={url} />
       <div className="flex space-x-4 items-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
