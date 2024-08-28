@@ -7,14 +7,16 @@ import {
   usePresence,
   usePresenceListener,
 } from "ably/react";
-import React, { useEffect,  useRef, useState } from "react";
-import { Skeleton } from "../ui/skeleton";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import React, { useEffect, useRef, useState } from "react";
+import { Skeleton } from "../../ui/skeleton";
+import { ScrollArea, ScrollBar } from "../../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
-import { Textarea } from "../ui/textarea";
-import { Button, buttonVariants } from "../ui/button";
+import { Textarea } from "../../ui/textarea";
+import { Button, buttonVariants } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
+import { ChevronUp } from "lucide-react";
+import CustomTooltip from "@/components/tooltip";
 
 // read only vars
 const messageEvent = "first";
@@ -36,9 +38,10 @@ function ChatScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [messageText, setMessageText] = useState(stringEmpty);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [page, setPages] = useState(1);
 
   // global state vars
-  const presenceSet = useOnlineSetStore((state) => state.onlineSet)
+  const presenceSet = useOnlineSetStore((state) => state.onlineSet);
   const insertPresence = useOnlineSetStoreManager((state) => state.insert);
   const deletePresence = useOnlineSetStoreManager((state) => state.delete);
 
@@ -166,6 +169,10 @@ function ChatScreen() {
     setMessageText(stringEmpty);
   };
 
+  const handleLoadMore = () => {
+    console.log("Called handleLoadMore...");
+  };
+
   useEffect(() => {
     const initialize = async () => {
       await loadUser();
@@ -179,7 +186,7 @@ function ChatScreen() {
   if (isLoading) {
     return (
       <div className="flex flex-col space-y-4">
-        <Skeleton className="h-[calc(70vh)] whitespace-nowrap rounded-md border mx-4" />
+        <Skeleton className="h-[calc(60vh)] whitespace-nowrap rounded-md border mx-4" />
         <Skeleton className="h-[calc(10vh)] mx-4 min-w-max mt-4" />
         <Skeleton className="h-[calc(5vh)] mx-4 min-w-max mt-4" />
       </div>
@@ -187,9 +194,18 @@ function ChatScreen() {
   }
 
   return (
-    // Publish a message with the name 'first' and the contents 'Here is my first message!' when the 'Publish' button is clicked
     <section>
-      <ScrollArea className="h-[calc(70vh)] whitespace-nowrap rounded-md border mx-4">
+      <div className="mx-4 min-w-max">
+        <Button
+          variant="ghost"
+          size={"sm"}
+          className="w-full"
+          onClick={handleLoadMore}
+        >
+          <ChevronUp />
+        </Button>
+      </div>
+      <ScrollArea className="h-[calc(60vh)] whitespace-nowrap rounded-md border mt-4 mx-4">
         <ul>
           {messages.map((message) => {
             const chatMessageData = message.data as ChatMessageState;

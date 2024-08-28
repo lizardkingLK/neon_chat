@@ -12,10 +12,10 @@ const Navbar = () => {
         </Link>
       </div>
       <div className="flex space-x-4 items-center">
-        <ThemeSwitch />
-        <SignedIn >
+        <SignedIn>
           <UserButton />
         </SignedIn>
+        <ThemeSwitch />
       </div>
     </div>
   );
