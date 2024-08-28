@@ -3,7 +3,8 @@
 import Messaging from "@/components/messaging/ably/ChatComponent";
 
 const Chat = () => {
-  <Messaging />;
+  "Hello World"
+  // <Messaging />;
 };
 
 export default Chat;
