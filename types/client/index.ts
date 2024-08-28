@@ -46,3 +46,7 @@ export type UserState = {
 export type GroupResponse = {
   Message: MessageResponse[];
 } & GroupType;
+
+export type SettingsState = {
+  autoscroll: boolean;
+};

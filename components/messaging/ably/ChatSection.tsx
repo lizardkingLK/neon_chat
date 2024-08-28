@@ -67,7 +67,7 @@ function ChatScreen() {
   };
 
   const pageMessages = async (pageNo: number) => {
-    await fetch(`/api/messages?groupId=${group?.groupId}&page=${pageNo}`)
+    await fetch(`/api/messages?groupId=${group?.id}&page=${pageNo}`)
       .then((res) => res.json())
       .then((data) => {
         const result: MessageResponse[] | null = data?.data;
@@ -134,6 +134,8 @@ function ChatScreen() {
     };
 
     setMessages((previousMessages) => [...previousMessages, newMessage]);
+
+    handleRender();
   });
 
   // Publishes presence event
