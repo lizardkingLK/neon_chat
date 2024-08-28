@@ -1,58 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { MessageType } from "@/types/client";
 
 const prisma = new PrismaClient();
 
-// To handle a GET request to /api
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ message: "Hello World" }, { status: 200 });
-}
+  const groupId = request.nextUrl.searchParams.get("groupId"),
+    page = request.nextUrl.searchParams.get("page");
 
-type GroupState = {
-  id: string;
-  name: string;
-  groupId: string;
-};
-
-type UserState = {
-  id: string;
-  username: string;
-};
-
-type ChatMessageState = {
-  content: string;
-  createdOn: string;
-  createdBy: UserState;
-  group: GroupState;
-};
-
-export async function POST(request: NextRequest) {
-  const { content, createdOn, createdBy, group } =
-    (await request.json()) as unknown as ChatMessageState;
-
-  if (!(content && createdOn && createdBy && group)) {
+  if (groupId === null || page === null) {
     return NextResponse.json(
-      { message: "error. request body invalid" },
+      { message: "error. invalid params" },
       { status: 500 }
     );
   }
 
-  const userRecord = await prisma.user.findUnique({
-    where: { userId: createdBy.id },
+  const group = await prisma.group.findUnique({
+    where: { groupId },
   });
-  if (!userRecord) {
-    return NextResponse.json(
-      { message: "error. user was not found" },
-      { status: 500 }
-    );
-  }
-
-  const groupRecord = await prisma.group.findUnique({
-    where: { groupId: group.groupId },
-  });
-  if (!groupRecord) {
+  if (!group) {
     return NextResponse.json(
       { message: "error. group was not found" },
+      { status: 404 }
+    );
+  }
+
+  const data = await prisma.message.findMany({
+    where: {
+      groupId: group.id,
+    },
+    include: {
+      Author: true,
+      Group: true,
+    },
+    orderBy: {
+      createdOn: "desc",
+    },
+    skip: Number(page) * 5,
+    take: 5,
+  });
+
+  return NextResponse.json({ data }, { status: 200 });
+}
+
+export async function POST(request: NextRequest) {
+  const { content, createdOn, authorId, groupId } =
+    (await request.json()) as unknown as MessageType;
+
+  if (!(content && createdOn && authorId && groupId)) {
+    return NextResponse.json(
+      { message: "error. request body invalid" },
       { status: 500 }
     );
   }
@@ -61,8 +58,12 @@ export async function POST(request: NextRequest) {
     data: {
       content,
       createdOn,
-      authorId: userRecord?.id,
-      groupId: groupRecord?.id,
+      authorId: authorId,
+      groupId: groupId,
+    },
+    include: {
+      Author: true,
+      Group: true,
     },
   });
 

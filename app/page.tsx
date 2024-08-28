@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import QRCode from "react-qr-code";
-import { ChatBubbleIcon } from "@radix-ui/react-icons";
 import { MessageCircle } from "lucide-react";
 
 const Index = () => {

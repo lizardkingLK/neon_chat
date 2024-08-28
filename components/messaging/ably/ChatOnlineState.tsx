@@ -9,15 +9,11 @@ export const useOnlineSetStoreManager = create(() => ({
     const onlineSet = useOnlineSetStore.getState().onlineSet;
     onlineSet.push(username);
     useOnlineSetStore.setState({ onlineSet });
-    
-    console.log(onlineSet)
   },
   delete: (username: string) => {
     const onlineSet = useOnlineSetStore.getState().onlineSet;
     useOnlineSetStore.setState({
       onlineSet: onlineSet.filter((item) => item !== username),
     });
-
-    console.log(onlineSet.filter((item) => item !== username))
   },
 }));
