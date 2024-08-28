@@ -1,7 +1,7 @@
 import { ChatMessageState } from "@/types/client";
 import Link from "next/link";
 import React, { memo } from "react";
-import CustomTooltip from "../tooltip";
+import CustomTooltip from "../../tooltip";
 import { cn } from "@/lib/utils";
 import { useOnlineSetStore } from "./ChatOnlineState";
 

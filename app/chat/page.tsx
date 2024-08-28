@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
-import dynamic from "next/dynamic";
+import Messaging from "@/components/messaging/ably/ChatComponent";
 
-const Messaging = dynamic(() => import("@/components/messaging"), {
-  ssr: false,
-});
+enum applicationTypes {
+  // Ably
+  ABL = "ABL",
+
+  // Upstash
+  URK = "URK",
+}
+
+const applicationType = process.env.NEXT_PUBLIC_APPLICATION_TYPE!;
 
 const Chat = () => {
-  return (
-      <Messaging />
-  );
+  if (applicationType === applicationTypes.ABL) {
+    return (
+        <Messaging />
+    );
+  }
 };
 
 export default Chat;

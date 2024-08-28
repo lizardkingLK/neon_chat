@@ -8,11 +8,11 @@ import {
   usePresenceListener,
 } from "ably/react";
 import React, { useEffect,  useRef, useState } from "react";
-import { Skeleton } from "../ui/skeleton";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { Skeleton } from "../../ui/skeleton";
+import { ScrollArea, ScrollBar } from "../../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
-import { Textarea } from "../ui/textarea";
-import { Button, buttonVariants } from "../ui/button";
+import { Textarea } from "../../ui/textarea";
+import { Button, buttonVariants } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
 
