@@ -1,12 +1,22 @@
 import React from "react";
-import dynamic from "next/dynamic";
+import { Realtime } from "ably";
+import { AblyProvider, ChannelProvider } from "ably/react";
+import ChatSection from "./ChatSection";
 
-const Messaging = dynamic(() => import("@/components/messaging/ably/ChatComponent"), {
-  ssr: false,
-});
+const defaultChannel = "get-started";
 
-const Chat = () => {
-  return <Messaging />;
+const Messaging = () => {
+  const client = new Realtime({ authUrl: "/api/auth/messaging" });
+
+  return (
+    <section>
+      <AblyProvider client={client}>
+        <ChannelProvider channelName={defaultChannel}>
+          <ChatSection />
+        </ChannelProvider>
+      </AblyProvider>
+    </section>
+  );
 };
 
-export default Chat;
+export default Messaging;
