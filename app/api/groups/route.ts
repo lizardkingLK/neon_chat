@@ -8,11 +8,6 @@ type GroupState = {
   name: string;
 };
 
-// To handle a GET request to /api
-export async function GET(request: NextRequest) {
-  return NextResponse.json({ message: "Hello World" }, { status: 200 });
-}
-
 export async function POST(request: NextRequest) {
   const { groupId, name } = (await request.json()) as GroupState;
 

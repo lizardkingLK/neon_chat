@@ -1,3 +1,4 @@
+import { UserState } from "@/types/client";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -20,7 +21,15 @@ export async function GET() {
     await prisma.user.create({ data: { userId: user.id, username } });
   }
 
-  return NextResponse.json({ user }, { status: 200 });
+  return NextResponse.json(
+    {
+      user: {
+        clerkBody: user,
+        prismaBody: userRecord,
+      } as UserState,
+    },
+    { status: 200 }
+  );
 }
 
 export async function POST(request: NextRequest) {

@@ -1,42 +1,48 @@
-export type GetGroupResponse = {
-  Message: ({
-    Author: {
-      id: number;
-      userId: string;
-      username: string;
-    };
-    Group: {
-      id: number;
-      groupId: string;
-      name: string;
-    };
-  } & {
-    id: number;
-    content: string;
-    createdOn: string;
-    groupId: number;
-    authorId: number;
-  })[];
-} & {
+import { User } from "@clerk/nextjs/server";
+import { Message } from "ably";
+
+export type MessageType = {
+  content: string;
+  createdOn: string;
+  groupId: number;
+  authorId: number;
+};
+
+export type GroupType = {
   id: number;
   groupId: string;
   name: string;
 };
 
-export type GroupState = {
-  groupId: string;
-  name: string;
-};
-
-export type UserState = {
-  id: string;
+export type AuthorType = {
+  id: number;
+  userId: string;
   username: string;
 };
 
-export type ChatMessageState = {
-  messageId: string;
-  content: string;
-  createdOn: string;
-  createdBy: UserState;
-  group: GroupState;
+export type MessageResponse = {
+  Author: AuthorType;
+  Group: GroupType;
+} & {
+  id: number;
+} & MessageType;
+
+export type MessageState = {
+  liveBody: Message | null;
+  dataBody: MessageResponse | null;
 };
+
+export type UserType = {
+  id: number;
+  userId: string;
+  username: string;
+}
+
+export type UserState = {
+  clerkBody: User | null;
+  prismaBody: UserType | null;
+};
+
+export type GroupResponse = {
+  Message: MessageResponse[];
+} & GroupType;

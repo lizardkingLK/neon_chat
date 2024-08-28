@@ -1,13 +1,19 @@
-import { ChatMessageState, GetGroupResponse, GroupState } from "@/types/client";
-import { User } from "@clerk/nextjs/server";
-import { Message, PresenceMessage } from "ably";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  GroupResponse,
+  GroupType,
+  MessageResponse,
+  MessageState,
+  MessageType,
+  UserState,
+} from "@/types/client";
+import { PresenceMessage } from "ably";
 import {
   useChannel,
   useConnectionStateListener,
   usePresence,
   usePresenceListener,
 } from "ably/react";
-import React, { useEffect, useRef, useState } from "react";
 import { Skeleton } from "../../ui/skeleton";
 import { ScrollArea, ScrollBar } from "../../ui/scroll-area";
 import ChatMessage from "./ChatMessage";
@@ -16,7 +22,7 @@ import { Button, buttonVariants } from "../../ui/button";
 import { cn } from "@/lib/utils";
 import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
 import { ChevronUp } from "lucide-react";
-import CustomTooltip from "@/components/tooltip";
+import CircularLoader from "@/components/loader/circular";
 
 // read only vars
 const messageEvent = "first";
@@ -24,21 +30,26 @@ const defaultChannel = "get-started";
 const stringEmpty = "";
 const activePresence = ["enter", "present", "update"];
 const defaultGroup = {
+  id: 1,
   groupId: "N_CHAT",
   name: "NEON CHAT",
+  page: 1,
 };
 
 function ChatScreen() {
   // ref vars
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRefEnd = useRef<HTMLDivElement>(null);
+  const scrollRefStart = useRef<HTMLDivElement>(null);
+  const messageTextArea = useRef<HTMLTextAreaElement>(null);
 
   // state vars
-  const [isLoading, setLoading] = useState(true);
-  const [group, setGroup] = useState<GroupState | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [isInitializing, setInitializing] = useState(true);
+  const [group, setGroup] = useState<GroupResponse | null>(null);
+  const [user, setUser] = useState<UserState | null>(null);
   const [messageText, setMessageText] = useState(stringEmpty);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [page, setPages] = useState(1);
+  const [messages, setMessages] = useState<MessageState[]>([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setLoading] = useState(false);
 
   // global state vars
   const presenceSet = useOnlineSetStore((state) => state.onlineSet);
@@ -55,39 +66,46 @@ function ChatScreen() {
       });
   };
 
-  const loadMessages = async (data: GroupState) => {
+  const pageMessages = async (pageNo: number) => {
+    await fetch(`/api/messages?groupId=${group?.groupId}&page=${pageNo}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const result: MessageResponse[] | null = data?.data;
+        if (result) {
+          const groupMessages: MessageState[] = result
+            .reverse()
+            .map((item) => ({
+              dataBody: item,
+              liveBody: null,
+            }));
+
+          setMessages([...groupMessages, ...messages]);
+        }
+      });
+  };
+
+  const loadMessages = async (data: GroupType) => {
     await fetch("/api/groups", {
       method: "POST",
       body: JSON.stringify(data),
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data?.group) {
-          const group: GetGroupResponse = data?.group;
-          setGroup(group);
-
-          const groupMessages: ChatMessageState[] = group.Message.map(
-            (item) => ({
-              messageId: item.id.toString(),
-              content: item.content,
-              createdBy: {
-                id: item.Author.userId,
-                username: item.Author.username,
-              },
-              createdOn: item.createdOn,
-              group: {
-                groupId: group.groupId,
-                name: group.name,
-              },
-            })
-          );
-          setMessages(
-            groupMessages.reverse().map((item) => ({
-              userId: item.messageId,
-              data: item,
-            }))
-          );
+        if (!data?.group) {
+          return;
         }
+
+        const group: GroupResponse = data?.group;
+        setGroup(group);
+
+        const groupMessages: MessageState[] = group.Message.reverse().map(
+          (item) => ({
+            dataBody: item,
+            liveBody: null,
+          })
+        );
+
+        setMessages(groupMessages);
       });
   };
 
@@ -109,9 +127,13 @@ function ChatScreen() {
     console.log("Connected to Ably!");
   });
 
-  // Create a channel called defaultChannel and subscribe to all messages with the name 'first' using the useChannel hook
   const { channel } = useChannel(defaultChannel, messageEvent, (message) => {
-    setMessages((previousMessages) => [...previousMessages, message]);
+    const newMessage: MessageState = {
+      dataBody: message.data,
+      liveBody: { ...message, data: null },
+    };
+
+    setMessages((previousMessages) => [...previousMessages, newMessage]);
   });
 
   // Publishes presence event
@@ -131,17 +153,17 @@ function ChatScreen() {
   };
 
   const handleMessage = async () => {
-    if (!user?.username) {
+    if (!(user?.clerkBody?.username && group?.id)) {
       console.log("error. username invalid");
       return;
     }
 
     const message = {
+      authorId: user?.prismaBody?.id,
       content: messageText,
       createdOn: new Date().getTime().toString(),
-      createdBy: { id: user.id, username: user.username },
-      group,
-    } as ChatMessageState;
+      groupId: group.id,
+    } as unknown as MessageType;
 
     fetch("/api/messages", {
       method: "POST",
@@ -149,43 +171,62 @@ function ChatScreen() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data?.message) {
-          handleSend(message);
+        const newMessage: MessageResponse = data?.message;
+        if (newMessage) {
+          handleSend(newMessage);
         }
       });
   };
 
-  const handleSend = (message: ChatMessageState) => {
+  const handleSend = (message: MessageResponse) => {
     channel.publish(messageEvent, message);
   };
 
   const handleRender = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ block: "end", behavior: "smooth" });
+    if (scrollRefEnd.current) {
+      scrollRefEnd.current.scrollIntoView({ block: "end", behavior: "smooth" });
     }
   };
 
   const handleClear = () => {
     setMessageText(stringEmpty);
+
+    if (messageTextArea.current) {
+      messageTextArea.current.focus();
+    }
   };
 
-  const handleLoadMore = () => {
-    console.log("Called handleLoadMore...");
+  const handleLoadMore = async () => {
+    setLoading(true);
+
+    const newPage = page + 1;
+    await pageMessages(page);
+    setPage(newPage);
+
+    if (scrollRefStart.current) {
+      scrollRefStart.current.scrollIntoView({
+        block: "end",
+        behavior: "smooth",
+      });
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => {
     const initialize = async () => {
       await loadUser();
       await loadMessages(defaultGroup);
-      setLoading(false);
+      setInitializing(false);
     };
 
     initialize();
   }, []);
 
-  if (isLoading) {
+  if (isInitializing) {
     return (
       <div className="flex flex-col space-y-4">
+        <Skeleton className="h-[calc(5vh)] mx-4 min-w-max mt-4" />
         <Skeleton className="h-[calc(60vh)] whitespace-nowrap rounded-md border mx-4" />
         <Skeleton className="h-[calc(10vh)] mx-4 min-w-max mt-4" />
         <Skeleton className="h-[calc(5vh)] mx-4 min-w-max mt-4" />
@@ -206,21 +247,30 @@ function ChatScreen() {
         </Button>
       </div>
       <ScrollArea className="h-[calc(60vh)] whitespace-nowrap rounded-md border mt-4 mx-4">
+        {isLoading && (
+          <div className="my-4">
+            <div ref={scrollRefStart}></div>
+            <CircularLoader />
+          </div>
+        )}
         <ul>
           {messages.map((message) => {
-            const chatMessageData = message.data as ChatMessageState;
+            const dataBody = message.dataBody!;
             return (
-              <li key={chatMessageData.messageId}>
-                <ChatMessage {...chatMessageData} />
+              <li key={dataBody.id}>
+                <ChatMessage {...message} />
               </li>
             );
           })}
-          {messages.length > 0 && <div className="h-24" ref={scrollRef}></div>}
+          {messages.length > 0 && (
+            <div className="h-24" ref={scrollRefEnd}></div>
+          )}
         </ul>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="mx-4 min-w-max mt-4">
         <Textarea
+          ref={messageTextArea}
           placeholder="Type your message here."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
