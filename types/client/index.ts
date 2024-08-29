@@ -40,7 +40,11 @@ export type UserType = {
 
 export type UserState = {
   clerkBody: User | null;
-  prismaBody: UserType | null;
+  prismaBody:
+    | (UserType & {
+        Settings: SettingsType | null;
+      })
+    | null;
 };
 
 export type GroupResponse = {

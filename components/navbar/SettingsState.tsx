@@ -9,6 +9,7 @@ export const useSettingsStore = create<SettingsType>(() => ({
 
 export const useSettingsStoreManager = create(() => ({
   initializeSettings: (initialState: SettingsType) => {
+    console.log({ state: useSettingsStore.getState() });
     useSettingsStore.setState(initialState);
   },
   updateSettings: (updatedState: SettingsType) => {

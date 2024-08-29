@@ -1,19 +1,22 @@
 "use client";
 
+import CircularLoader from "@/components/loader/circular";
 import {
   useSettingsStore,
   useSettingsStoreManager,
 } from "@/components/navbar/SettingsState";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 
 const settingsApi = "/api/settings";
 
 const Settings = () => {
-  const [isLoading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const [isInitializing, setInitializing] = useState(true);
 
   const settings = useSettingsStore((state) => state);
   const initializeSettings = useSettingsStoreManager(
@@ -27,8 +30,8 @@ const Settings = () => {
     await fetch(settingsApi)
       .then((response) => response.json())
       .then((data) => {
-        console.log({ settings: data?.settings });
         initializeSettings(data?.settings!);
+        setInitializing(false);
       });
   }, [initializeSettings]);
 
@@ -44,7 +47,7 @@ const Settings = () => {
   const handleSave = async () => {
     await handleUpdateRequest().then(({ success }) => {
       if (success) {
-        console.log("updated settings");
+        toast({ description: "Settings Updated!" });
       }
     });
   };
@@ -52,6 +55,14 @@ const Settings = () => {
   useEffect(() => {
     getSettings();
   }, [getSettings]);
+
+  if (isInitializing) {
+    return (
+      <section className="flex flex-col justify-center h-[calc(85vh)] w-full">
+        <CircularLoader />
+      </section>
+    );
+  }
 
   const { autoScroll } = settings;
 
@@ -74,16 +85,12 @@ const Settings = () => {
                 updateSettings({ ...settings, autoScroll: !autoScroll })
               }
             />
-            <Label htmlFor="auto-scroll-new">{autoScroll ? "On" : "Off"}</Label>
           </div>
         </div>
       </div>
       <div className="flex items-center justify-end space-x-2 mt-4">
-        <Link
-          href="/chat"
-          className={buttonVariants({ variant: "destructive" })}
-        >
-          Cancel
+        <Link href="/chat" className={buttonVariants({ variant: "outline" })}>
+          Close
         </Link>
         <Button variant={"secondary"} onClick={handleSave}>
           Save

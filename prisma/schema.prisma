@@ -9,12 +9,12 @@ datasource db {
 }
 
 model User {
-  id       Int        @id @default(autoincrement())
-  userId   String     @unique
-  username String     @unique
+  id       Int       @id @default(autoincrement())
+  userId   String    @unique
+  username String    @unique
   Message  Message[]
   Group    Group[]
-  Settings Settings[]
+  Settings Settings?
 }
 
 model Message {
