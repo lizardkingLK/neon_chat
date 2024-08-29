@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/navbar/navbar";
+import Navbar from "@/components/navbar";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/themes/ThemeProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const robotoMono = Roboto_Mono({ subsets: ["latin"] });
 
@@ -31,6 +32,9 @@ export default function RootLayout({
             <div className="h-screen w-full lg:w-1/3 md:w-1/2 md:absolute md:left-1/2 md:-translate-x-1/2">
               {<Navbar />}
               {children}
+            </div>
+            <div>
+              <Toaster />
             </div>
           </ThemeProvider>
         </body>

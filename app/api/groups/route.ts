@@ -1,16 +1,24 @@
+import { GroupType } from "@/types/client";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-type GroupState = {
-  groupId: string;
-  name: string;
+const include: any = {
+  Message: {
+    include: {
+      Author: true,
+      Group: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+    take: 5,
+  },
 };
 
 export async function POST(request: NextRequest) {
-  const { groupId, name } = (await request.json()) as GroupState;
-
+  const { groupId, name } = (await request.json()) as GroupType;
   if (!(groupId && name)) {
     return NextResponse.json(
       { message: "error. request body invalid" },
@@ -18,26 +26,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const includeArgs: any = {
-    Message: {
-      include: {
-        Author: true,
-        Group: true,
-      },
-      orderBy: {
-        id: "desc",
-      },
-      take: 5,
-    },
-  };
   let group = await prisma.group.findUnique({
     where: { groupId },
-    include: includeArgs,
+    include,
   });
   if (!group) {
     group = await prisma.group.create({
       data: { groupId, name },
-      include: includeArgs,
+      include,
     });
   }
 

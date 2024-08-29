@@ -4,35 +4,31 @@ import { MessageType } from "@/types/client";
 
 const prisma = new PrismaClient();
 
+const include =  {
+  Author: true,
+  Group: true,
+}
+
+const errors = {
+  invalidParams: () =>
+    NextResponse.json({ message: "error. invalid parameters" }, { status: 500 }),
+  invalidBody: () =>
+    NextResponse.json({ message: "error. invalid body" }, { status: 500 }),
+};
+
 export async function GET(request: NextRequest) {
   const groupId = request.nextUrl.searchParams.get("groupId"),
     page = request.nextUrl.searchParams.get("page");
 
   if (groupId === null || page === null) {
-    return NextResponse.json(
-      { message: "error. invalid params" },
-      { status: 500 }
-    );
-  }
-
-  const group = await prisma.group.findUnique({
-    where: { groupId },
-  });
-  if (!group) {
-    return NextResponse.json(
-      { message: "error. group was not found" },
-      { status: 404 }
-    );
+    return errors.invalidParams();
   }
 
   const data = await prisma.message.findMany({
     where: {
-      groupId: group.id,
+      groupId: Number(groupId),
     },
-    include: {
-      Author: true,
-      Group: true,
-    },
+    include,
     orderBy: {
       createdOn: "desc",
     },
@@ -48,10 +44,7 @@ export async function POST(request: NextRequest) {
     (await request.json()) as unknown as MessageType;
 
   if (!(content && createdOn && authorId && groupId)) {
-    return NextResponse.json(
-      { message: "error. request body invalid" },
-      { status: 500 }
-    );
+    return errors.invalidBody();
   }
 
   const message = await prisma.message.create({
@@ -61,10 +54,7 @@ export async function POST(request: NextRequest) {
       authorId: authorId,
       groupId: groupId,
     },
-    include: {
-      Author: true,
-      Group: true,
-    },
+    include,
   });
 
   return NextResponse.json({ message }, { status: 201 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   GroupResponse,
   GroupType,
@@ -23,6 +23,10 @@ import { cn } from "@/lib/utils";
 import { useOnlineSetStore, useOnlineSetStoreManager } from "./ChatOnlineState";
 import { ChevronUp } from "lucide-react";
 import CircularLoader from "@/components/loader/circular";
+import {
+  useSettingsStore,
+  useSettingsStoreManager,
+} from "@/components/navbar/SettingsState";
 
 // read only vars
 const messageEvent = "first";
@@ -55,19 +59,29 @@ function ChatScreen() {
   const presenceSet = useOnlineSetStore((state) => state.onlineSet);
   const insertPresence = useOnlineSetStoreManager((state) => state.insert);
   const deletePresence = useOnlineSetStoreManager((state) => state.delete);
+  const autoScroll = useSettingsStore((state) => state.autoScroll);
+  const initializeSettings = useSettingsStoreManager(
+    (state) => state.initializeSettings
+  );
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     await fetch("/api/users")
       .then((res) => res.json())
       .then((data) => {
-        if (data?.user) {
-          setUser(data?.user);
+        const user = data?.user as UserState;
+        if (user) {
+          setUser(user);
+        }
+
+        const settings = user?.prismaBody?.Settings;
+        if (settings) {
+          initializeSettings(settings);
         }
       });
-  };
+  }, [initializeSettings]);
 
   const pageMessages = async (pageNo: number) => {
-    await fetch(`/api/messages?groupId=${group?.groupId}&page=${pageNo}`)
+    await fetch(`/api/messages?groupId=${group?.id}&page=${pageNo}`)
       .then((res) => res.json())
       .then((data) => {
         const result: MessageResponse[] | null = data?.data;
@@ -134,6 +148,8 @@ function ChatScreen() {
     };
 
     setMessages((previousMessages) => [...previousMessages, newMessage]);
+
+    handleScrolling(true);
   });
 
   // Publishes presence event
@@ -148,7 +164,7 @@ function ChatScreen() {
 
   const handlePublish = async () => {
     handleMessage();
-    handleRender();
+    handleScrolling();
     handleClear();
   };
 
@@ -182,7 +198,11 @@ function ChatScreen() {
     channel.publish(messageEvent, message);
   };
 
-  const handleRender = () => {
+  const handleScrolling = (checkOption?: boolean) => {
+    if (checkOption && !autoScroll) {
+      return;
+    }
+
     if (scrollRefEnd.current) {
       scrollRefEnd.current.scrollIntoView({ block: "end", behavior: "smooth" });
     }
@@ -214,14 +234,14 @@ function ChatScreen() {
   };
 
   useEffect(() => {
-    const initialize = async () => {
+    const initialize = async (finishInitializing: () => void) => {
       await loadUser();
       await loadMessages(defaultGroup);
-      setInitializing(false);
+      finishInitializing();
     };
 
-    initialize();
-  }, []);
+    initialize(() => setInitializing(false));
+  }, [loadUser]);
 
   if (isInitializing) {
     return (

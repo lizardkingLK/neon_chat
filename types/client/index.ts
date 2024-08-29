@@ -36,13 +36,27 @@ export type UserType = {
   id: number;
   userId: string;
   username: string;
-}
+};
 
 export type UserState = {
   clerkBody: User | null;
-  prismaBody: UserType | null;
+  prismaBody:
+    | (UserType & {
+        Settings: SettingsType | null;
+      })
+    | null;
 };
 
 export type GroupResponse = {
   Message: MessageResponse[];
 } & GroupType;
+
+export type SettingsType = {
+  id: number;
+  autoScroll: boolean;
+  ownerId: number;
+};
+
+export type SettingsResponse = {
+  Owner: UserType;
+} & SettingsType;
