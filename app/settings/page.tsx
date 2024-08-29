@@ -98,10 +98,6 @@ function Settings() {
       body: JSON.stringify(settings),
     });
 
-    await fetch("/api/jobs/messages", { method: "DELETE" })
-      .then((response) => response.json())
-      .then((data) => console.log({ data }));
-
     return await response.json();
   };
 

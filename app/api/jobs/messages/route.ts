@@ -15,7 +15,7 @@ const queryFilter = {
 
 const currentTimeAsNumber = new Date().getTime();
 
-const getOlderThan24 = ({ createdOn }) => {
+const getOlderThan24 = ({ createdOn }: { createdOn: string }) => {
   const createdOnAsNumber = createdOn ? Number(createdOn) : currentTimeAsNumber;
 
   return currentTimeAsNumber - createdOnAsNumber >= 86400000;
