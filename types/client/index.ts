@@ -55,6 +55,7 @@ export type SettingsType = {
   id: number;
   autoScroll: boolean;
   ownerId: number;
+  expiringMessages: boolean;
 };
 
 export type SettingsResponse = {
