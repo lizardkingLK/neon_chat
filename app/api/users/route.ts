@@ -44,19 +44,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const { username } = await request.json();
   if (!username) {
-    return errors.invalidParams;
+    return errors.invalidParams();
   }
 
   const user = await prisma.user.findUnique({
     where: { username },
   });
   if (!user) {
-    return errors.userNotFound;
+    return errors.userNotFound();
   }
 
   const extendedUser = await clerkClient().users.getUser(user?.userId);
   if (!extendedUser) {
-    return errors.userNotFound;
+    return errors.userNotFound();
   }
 
   return NextResponse.json({ user: extendedUser }, { status: 200 });

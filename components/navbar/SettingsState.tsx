@@ -1,13 +1,17 @@
-import { SettingsState } from "@/types/client";
+import { SettingsType } from "@/types/client";
 import { create } from "zustand";
 
-const settingsState =  (async () =>
-  (await (await fetch("/api/settings")).json()) as SettingsState)();
-
-export const useSettingsStore = create<SettingsState>(() => settingsState);
+export const useSettingsStore = create<SettingsType>(() => ({
+  id: 0,
+  autoScroll: true,
+  ownerId: 0,
+}));
 
 export const useSettingsStoreManager = create(() => ({
-  update: (autoscroll: boolean) => {
-    useSettingsStore.setState({ autoscroll });
+  initializeSettings: (initialState: SettingsType) => {
+    useSettingsStore.setState(initialState);
+  },
+  updateSettings: (updatedState: SettingsType) => {
+    useSettingsStore.setState(updatedState);
   },
 }));

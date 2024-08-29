@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     page = request.nextUrl.searchParams.get("page");
 
   if (groupId === null || page === null) {
-    return errors.invalidParams;
+    return errors.invalidParams();
   }
 
   const data = await prisma.message.findMany({
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     (await request.json()) as unknown as MessageType;
 
   if (!(content && createdOn && authorId && groupId)) {
-    return errors.invalidBody;
+    return errors.invalidBody();
   }
 
   const message = await prisma.message.create({

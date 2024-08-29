@@ -1,6 +1,7 @@
+import { SettingsType } from "@/types/client";
 import { currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -24,26 +25,40 @@ const errors = {
 export async function GET() {
   const { username } = (await currentUser())!;
   if (!username) {
-    return errors.invalidParams;
+    return errors.invalidParams();
   }
 
   const userRecord = await prisma.user.findUnique({ where: { username } });
   if (!userRecord) {
-    return errors.userNotFound;
+    return errors.userNotFound();
   }
 
-  let settingsRecord = await prisma.settings.findFirst({
+  let settings = await prisma.settings.findUnique({
     where: { ownerId: userRecord.id },
     include,
   });
-  if (!userRecord) {
+
+  if (!settings) {
+    settings = await prisma.settings.create({
+      data: {
+        ownerId: userRecord.id,
+      },
+      include,
+    });
   }
-  settingsRecord = await prisma.settings.create({
+
+  return NextResponse.json({ settings }, { status: 200 });
+}
+
+export async function POST(request: NextRequest) {
+  const { autoScroll, id } = (await request.json()) as SettingsType;
+
+  await prisma.settings.update({
+    where: { id },
     data: {
-      ownerId: userRecord.id,
+      autoScroll,
     },
-    include,
   });
 
-  return NextResponse.json({ data: settingsRecord }, { status: 200 });
+  return NextResponse.json({ success: true }, { status: 200 });
 }

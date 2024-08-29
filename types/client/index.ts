@@ -36,7 +36,7 @@ export type UserType = {
   id: number;
   userId: string;
   username: string;
-}
+};
 
 export type UserState = {
   clerkBody: User | null;
@@ -47,6 +47,12 @@ export type GroupResponse = {
   Message: MessageResponse[];
 } & GroupType;
 
-export type SettingsState = {
-  autoscroll: boolean;
+export type SettingsType = {
+  id: number;
+  autoScroll: boolean;
+  ownerId: number;
 };
+
+export type SettingsResponse = {
+  Owner: UserType;
+} & SettingsType;

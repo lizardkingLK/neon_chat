@@ -39,5 +39,5 @@ model Settings {
   id         Int     @id @default(autoincrement())
   autoScroll Boolean @default(true)
   Owner      User    @relation(fields: [ownerId], references: [id])
-  ownerId    Int
+  ownerId    Int     @unique
 }
