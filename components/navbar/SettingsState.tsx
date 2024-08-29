@@ -4,12 +4,12 @@ import { create } from "zustand";
 export const useSettingsStore = create<SettingsType>(() => ({
   id: 0,
   autoScroll: true,
+  expiringMessages: false,
   ownerId: 0,
 }));
 
 export const useSettingsStoreManager = create(() => ({
   initializeSettings: (initialState: SettingsType) => {
-    console.log({ state: useSettingsStore.getState() });
     useSettingsStore.setState(initialState);
   },
   updateSettings: (updatedState: SettingsType) => {
