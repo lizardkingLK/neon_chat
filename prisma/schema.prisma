@@ -38,6 +38,7 @@ model Settings {
   id               Int     @id @default(autoincrement())
   autoScroll       Boolean @default(true)
   expiringMessages Boolean @default(false)
+  enterIsSend      Boolean @default(false)
   Owner            User    @relation(fields: [ownerId], references: [id])
   ownerId          Int     @unique
 }

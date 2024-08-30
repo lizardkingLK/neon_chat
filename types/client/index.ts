@@ -30,6 +30,7 @@ export type MessageResponse = {
 export type MessageState = {
   liveBody: Message | null;
   dataBody: MessageResponse | null;
+  separator?: { id: string };
 };
 
 export type UserType = {
@@ -56,6 +57,7 @@ export type SettingsType = {
   autoScroll: boolean;
   ownerId: number;
   expiringMessages: boolean;
+  enterIsSend: boolean;
 };
 
 export type SettingsResponse = {

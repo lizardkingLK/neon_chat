@@ -27,6 +27,7 @@ import {
   useSettingsStore,
   useSettingsStoreManager,
 } from "@/components/navbar/SettingsState";
+import { ChatBubbleIcon } from "@radix-ui/react-icons";
 
 // read only vars
 const messageEvent = "first";
@@ -54,11 +55,14 @@ function ChatScreen() {
   const [messages, setMessages] = useState<MessageState[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [separator, setSeparator] = useState(false);
 
   // global state vars
-  const presenceSet = useOnlineSetStore((state) => state.onlineSet);
-  const insertPresence = useOnlineSetStoreManager((state) => state.insert);
-  const deletePresence = useOnlineSetStoreManager((state) => state.delete);
+  const onlineSet = useOnlineSetStore((state) => state.onlineSet);
+  const updateOnlineSet = useOnlineSetStoreManager(
+    (state) => state.updateOnlineSet
+  );
   const autoScroll = useSettingsStore((state) => state.autoScroll);
   const initializeSettings = useSettingsStoreManager(
     (state) => state.initializeSettings
@@ -126,13 +130,10 @@ function ChatScreen() {
   const handlePresenceChange = (presenceData: PresenceMessage) => {
     const { action, clientId } = presenceData;
 
-    if (activePresence.includes(action) && !presenceSet.includes(clientId)) {
-      insertPresence(clientId);
-    } else if (
-      !activePresence.includes(action) &&
-      presenceSet.includes(clientId)
-    ) {
-      deletePresence(clientId);
+    if (activePresence.includes(action)) {
+      updateOnlineSet([...onlineSet, clientId]);
+    } else if (!activePresence.includes(action)) {
+      updateOnlineSet(onlineSet.filter((item) => item !== clientId));
     }
   };
 
@@ -147,9 +148,35 @@ function ChatScreen() {
       liveBody: { ...message, data: null },
     };
 
-    setMessages((previousMessages) => [...previousMessages, newMessage]);
+    const isSameUser =
+      newMessage.dataBody?.Author.username === user?.prismaBody?.username;
 
-    handleScrolling(true);
+    setMessages((previousMessages) => {
+      let messages = previousMessages;
+      let separators: MessageState[] = [];
+
+      if (!autoScroll && !separator) {
+        separators = [
+          {
+            dataBody: null,
+            liveBody: null,
+            separator: { id: `new_messages_${unreadCount}` },
+          },
+        ];
+
+        messages = previousMessages.filter((item) => !item.separator);
+
+        if (!isSameUser) {
+          setSeparator(true);
+        }
+      }
+
+      const newMessages = [...messages, ...separators, newMessage];
+
+      return newMessages;
+    });
+
+    handleScrolling(true, isSameUser);
   });
 
   // Publishes presence event
@@ -163,9 +190,15 @@ function ChatScreen() {
   usePresenceListener(defaultChannel, handlePresenceChange);
 
   const handlePublish = async () => {
+    if (!messageText) {
+      console.log("error. message content is empty");
+      return;
+    }
+
     handleMessage();
     handleScrolling();
     handleClear();
+    handleCleanSeparator();
   };
 
   const handleMessage = async () => {
@@ -198,8 +231,9 @@ function ChatScreen() {
     channel.publish(messageEvent, message);
   };
 
-  const handleScrolling = (checkOption?: boolean) => {
-    if (checkOption && !autoScroll) {
+  const handleScrolling = (checkOption?: boolean, sameUser?: boolean) => {
+    if (checkOption && !autoScroll && !sameUser) {
+      setUnreadCount((previousValue) => previousValue + 1);
       return;
     }
 
@@ -208,7 +242,21 @@ function ChatScreen() {
     }
   };
 
+  const handleCleanSeparator = () => {
+    setUnreadCount(0);
+    setMessages((previousMessages) =>
+      previousMessages.filter((item) => !item.separator)
+    );
+    setSeparator(false);
+  };
+
+  const handleMarkAsRead = () => {
+    handleScrolling();
+    handleCleanSeparator();
+  };
+
   const handleClear = () => {
+    setUnreadCount(0);
     setMessageText(stringEmpty);
 
     if (messageTextArea.current) {
@@ -256,15 +304,29 @@ function ChatScreen() {
 
   return (
     <section>
-      <div className="mx-4 min-w-max">
+      <div className="flex items-center space-x-4 mx-4 min-w-max">
         <Button
           variant="ghost"
           size={"sm"}
-          className="w-full"
+          className="w-full h-10"
           onClick={handleLoadMore}
         >
           <ChevronUp />
         </Button>
+        {unreadCount > 0 && !autoScroll && (
+          <Button
+            size={"icon"}
+            type="button"
+            className="animate-bounce relative inline-flex items-center p-3 text-sm font-medium text-center text-primary bg-secondary rounded-lg hover:bg-secondary dark:bg-secondary"
+            onClick={handleMarkAsRead}
+          >
+            <ChatBubbleIcon />
+            <span className="sr-only">Notifications</span>
+            <div className="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">
+              {unreadCount}
+            </div>
+          </Button>
+        )}
       </div>
       <ScrollArea className="h-[calc(60vh)] whitespace-nowrap rounded-md border mt-4 mx-4">
         {isLoading && (
@@ -275,12 +337,26 @@ function ChatScreen() {
         )}
         <ul>
           {messages.map((message) => {
-            const dataBody = message.dataBody!;
-            return (
-              <li key={dataBody.id}>
-                <ChatMessage {...message} />
-              </li>
-            );
+            const dataBody = message.dataBody;
+            if (dataBody) {
+              return (
+                <li key={dataBody.id}>
+                  <ChatMessage {...message} />
+                </li>
+              );
+            } else if (separator && message.separator) {
+              return (
+                <div
+                  key={message.separator.id}
+                  className="flex space-x-4 justify-center items-center"
+                >
+                  <p className="text-green-500">
+                    {" "}
+                    {unreadCount} New Message(s)
+                  </p>
+                </div>
+              );
+            }
           })}
           {messages.length > 0 && (
             <div className="h-24" ref={scrollRefEnd}></div>

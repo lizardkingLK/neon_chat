@@ -1,23 +1,13 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import QRCode from "react-qr-code";
-import { MessageCircle } from "lucide-react";
+import Image from "next/image";
 
 const Index = () => {
-  const [url, setUrl] = useState<string>("");
-
-  useEffect(() => {
-    setUrl(`${window.location.href}chat`);
-  }, []);
-
   return (
     <main className="flex flex-col justify-center items-center space-y-4 h-[calc(90vh)]">
-      <QRCode value={url} />
+      <Image src={'/favicon.png'} width={64} height={64} alt="neon_chat_logo" />
       <div className="flex space-x-4 items-center">
-        <MessageCircle size={32} />
         <h1 className="text-center font-black text-xl">NEON Chat</h1>
       </div>
       <h3 className="text-center text-gray-500">
