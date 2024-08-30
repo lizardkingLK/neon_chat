@@ -2,10 +2,18 @@
   "crons": [
     {
       "path": "/api/jobs/messages",
-      "schedule": "0 5 * * *",
-      "httpHeaders": {
-        "Authorization": "Bearer @cron-secret"
-      }
+      "schedule": "0 5 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/jobs/messages",
+      "headers": [
+        {
+          "key": "Authorization",
+          "value": "Bearer @cron-secret"
+        }
+      ]
     }
   ]
 }
