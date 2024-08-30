@@ -8,13 +8,14 @@ import { Toaster } from "@/components/ui/toaster";
 
 const robotoMono = Roboto_Mono({ subsets: ["latin"] });
 
-export const metaContent = {
+export const metadata: Metadata = {
   title: "Neon Chat",
-  shortName: "N_CHAT",
   description: "Message with your friends",
-}
-
-export const metadata: Metadata = metaContent;
+  openGraph: {
+    url: "https://neonchat.vercel.app",
+    siteName: "NeonChat",
+  },
+};
 
 export default function RootLayout({
   children,
