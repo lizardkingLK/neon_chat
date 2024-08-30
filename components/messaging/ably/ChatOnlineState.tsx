@@ -5,15 +5,7 @@ export const useOnlineSetStore = create<{ onlineSet: string[] }>(() => ({
 }));
 
 export const useOnlineSetStoreManager = create(() => ({
-  insert: (username: string) => {
-    const onlineSet = useOnlineSetStore.getState().onlineSet;
-    onlineSet.push(username);
+  updateOnlineSet: (onlineSet: string[]) => {
     useOnlineSetStore.setState({ onlineSet });
-  },
-  delete: (username: string) => {
-    const onlineSet = useOnlineSetStore.getState().onlineSet;
-    useOnlineSetStore.setState({
-      onlineSet: onlineSet.filter((item) => item !== username),
-    });
   },
 }));

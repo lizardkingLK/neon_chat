@@ -5,6 +5,7 @@ export const useSettingsStore = create<SettingsType>(() => ({
   id: 0,
   autoScroll: true,
   expiringMessages: false,
+  enterIsSend: false,
   ownerId: 0,
 }));
 

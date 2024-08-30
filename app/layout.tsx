@@ -11,8 +11,9 @@ const robotoMono = Roboto_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Neon Chat",
   description: "Message with your friends",
+  metadataBase: new URL("https://neonchat.vercel.app"),
   openGraph: {
-    url: "https://neonchat.vercel.app",
+    url: "/",
     siteName: "NeonChat",
   },
 };

@@ -1,7 +1,9 @@
 "use client";
 
+import { useOnlineSetStore } from "@/components/messaging/ably/ChatOnlineState";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { dateFormatterOptions, timeFormatterOptions } from "@/constants";
 import { cn } from "@/lib/utils";
 import { User } from "@clerk/nextjs/server";
 import Image from "next/image";
@@ -9,6 +11,8 @@ import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 
 const Profile = ({ params }: { params: { slug: string } }) => {
+  const onlineSet = useOnlineSetStore((state) => state.onlineSet);
+
   const [isLoading, setLoading] = useState(true);
   const [username] = useState(params.slug);
   const [user, setUser] = useState<User | null>(null);
@@ -52,9 +56,15 @@ const Profile = ({ params }: { params: { slug: string } }) => {
         height={200}
       />
       <h1 className="text-4xl mt-4">{params.slug}</h1>
-      <p className="mt-4 text-gray-500">
-        Last Active {new Date(Number(user?.lastActiveAt)).toLocaleDateString()}
-      </p>
+      {onlineSet.includes(username) ? (
+        <p className="mt-4 text-green-500">Active Now</p>
+      ) : (
+        <p className="mt-4 text-gray-500">{`Last Active ${new Date(
+          Number(user?.lastActiveAt)
+        ).toLocaleString("en-us", dateFormatterOptions)} ${new Date(
+          Number(user?.lastActiveAt)
+        ).toLocaleString("en-us", timeFormatterOptions)}`}</p>
+      )}
       <Link
         href={"/chat"}
         className={cn(buttonVariants({ variant: "ghost" }), "mt-4")}

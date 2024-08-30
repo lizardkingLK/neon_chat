@@ -51,7 +51,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { autoScroll, expiringMessages, id } =
+  const { autoScroll, expiringMessages, id, enterIsSend } =
     (await request.json()) as SettingsType;
 
   await prisma.settings.update({
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     data: {
       autoScroll,
       expiringMessages,
+      enterIsSend,
     },
   });
 
