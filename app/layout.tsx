@@ -14,25 +14,7 @@ export const metaContent = {
   description: "Message with your friends",
 }
 
-export const metadata: Metadata = {
-  title: metaContent.title,
-  description: metaContent.description,
-  openGraph: {
-    title: metaContent.shortName,
-    description: metaContent.description,
-    url: 'https://neonchat.vercel.app',
-    siteName: 'NeonChat',
-    images: [
-      {
-        url: 'https://neonchat.vercel.app/opengraph-image',
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: 'en-US',
-    type: 'website',
-  },
-};
+export const metadata: Metadata = metaContent;
 
 export default function RootLayout({
   children,
