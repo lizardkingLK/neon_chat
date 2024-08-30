@@ -9,6 +9,12 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "neonchat.vercel.app",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };
