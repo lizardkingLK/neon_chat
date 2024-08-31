@@ -25,7 +25,7 @@ export type MessageResponse = {
   Group: GroupType;
 } & {
   id: number;
-} & MessageType;
+} & MessageType & { isAuthorMessage?: boolean };
 
 export type MessageState = {
   liveBody: Message | null;

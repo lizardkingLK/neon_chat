@@ -63,7 +63,7 @@ function ChatScreen() {
   const updateOnlineSet = useOnlineSetStoreManager(
     (state) => state.updateOnlineSet
   );
-  const autoScroll = useSettingsStore((state) => state.autoScroll);
+  const { autoScroll, enterIsSend } = useSettingsStore((state) => state);
   const initializeSettings = useSettingsStoreManager(
     (state) => state.initializeSettings
   );
@@ -144,12 +144,11 @@ function ChatScreen() {
 
   const { channel } = useChannel(defaultChannel, messageEvent, (message) => {
     const newMessage: MessageState = {
-      dataBody: message.data,
+      dataBody: {...message.data, isAuthorMessage: message.data?.Author.username === user?.prismaBody?.username},
       liveBody: { ...message, data: null },
     };
 
-    const isSameUser =
-      newMessage.dataBody?.Author.username === user?.prismaBody?.username;
+    const isSameUser = newMessage?.dataBody?.isAuthorMessage;
 
     setMessages((previousMessages) => {
       let messages = previousMessages;
@@ -281,6 +280,13 @@ function ChatScreen() {
     setLoading(false);
   };
 
+  const handleKeyDown = (event: { keyCode: number; shiftKey: boolean }) => {
+    if (event.keyCode == 13 && !event.shiftKey && enterIsSend) {
+      handlePublish();
+      setMessageText(stringEmpty);
+    }
+  };
+
   useEffect(() => {
     const initialize = async (finishInitializing: () => void) => {
       await loadUser();
@@ -350,8 +356,7 @@ function ChatScreen() {
                   key={message.separator.id}
                   className="flex space-x-4 justify-center items-center"
                 >
-                  <p className="text-green-500">
-                    {" "}
+                  <p className="text-primary py-2 px-4 bg-gradient-to-r from-gray-500 via-gray-600 to-gray-500 backdrop-blur-xl rounded-lg">
                     {unreadCount} New Message(s)
                   </p>
                 </div>
@@ -369,6 +374,7 @@ function ChatScreen() {
           ref={messageTextArea}
           placeholder="Type your message here."
           value={messageText}
+          onKeyDown={handleKeyDown}
           onChange={(e) => setMessageText(e.target.value)}
         />
       </div>

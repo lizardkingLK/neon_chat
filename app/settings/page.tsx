@@ -13,6 +13,36 @@ import React, { useCallback, useEffect, useState } from "react";
 
 const settingsApi = "/api/settings";
 
+const EnterIsSend = () => {
+  const settings = useSettingsStore((state) => state);
+
+  const updateSettings = useSettingsStoreManager(
+    (state) => state.updateSettings
+  );
+
+  const { enterIsSend } = settings;
+
+  return (
+    <>
+      <div className="flex flex-col">
+        <p>Enter Is Send</p>
+        <small className="text-gray-400">
+          When pressing enter message gets sent
+        </small>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="enter-is-send"
+          defaultChecked={enterIsSend}
+          onClick={() =>
+            updateSettings({ ...settings, enterIsSend: !enterIsSend })
+          }
+        />
+      </div>
+    </>
+  );
+};
+
 const MessagesExpiring = () => {
   const settings = useSettingsStore((state) => state);
 
@@ -124,9 +154,13 @@ function Settings() {
   return (
     <section className="flex flex-col justify-between h-[calc(85vh)] mx-4">
       <div>
-        <h1 className="text-xl font-black">Settings</h1>
+        <h1 className="text-2xl font-black">SETTINGS</h1>
+        <small className="text-gray-500 mb-8">Personalize your Chat Experience</small>
         <div className="flex items-center justify-between space-x-2 mt-8">
           <AutoScrolling />
+        </div>
+        <div className="flex items-center justify-between space-x-2 mt-8">
+          <EnterIsSend />
         </div>
         <div className="flex items-center justify-between space-x-2 mt-8">
           <MessagesExpiring />

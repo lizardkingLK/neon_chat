@@ -47,31 +47,41 @@ const Profile = ({ params }: { params: { slug: string } }) => {
   }
 
   return (
-    <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center w-full m-4">
-      <Image
-        className="rounded-full w-auto h-auto"
-        src={user?.imageUrl ?? "/favicon.png"}
-        alt={username}
-        width={200}
-        height={200}
-      />
-      <h1 className="text-4xl mt-4">{params.slug}</h1>
-      {onlineSet.includes(username) ? (
-        <p className="mt-4 text-green-500">Active Now</p>
-      ) : (
-        <p className="mt-4 text-gray-500">{`Last Active ${new Date(
-          Number(user?.lastActiveAt)
-        ).toLocaleString("en-us", dateFormatterOptions)} ${new Date(
-          Number(user?.lastActiveAt)
-        ).toLocaleString("en-us", timeFormatterOptions)}`}</p>
-      )}
-      <Link
-        href={"/chat"}
-        className={cn(buttonVariants({ variant: "ghost" }), "mt-4")}
-      >
-        Go Back
-      </Link>
-    </div>
+    <section>
+      <div className="flex flex-col justify-between mx-4">
+        <div>
+          <h1 className="text-2xl font-black">PROFILE</h1>
+          <small className="text-gray-500 mb-8">
+            {params.slug} Details
+          </small>
+        </div>
+      </div>
+      <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center w-full m-4">
+        <Image
+          className="rounded-full w-auto h-auto"
+          src={user?.imageUrl ?? "/favicon.png"}
+          alt={username}
+          width={200}
+          height={200}
+        />
+        <h1 className="text-4xl mt-4">{params.slug}</h1>
+        {onlineSet.includes(username) ? (
+          <p className="mt-4 text-green-500">Active Now</p>
+        ) : (
+          <p className="mt-4 text-gray-500">{`Last Active ${new Date(
+            Number(user?.lastActiveAt)
+          ).toLocaleString("en-us", dateFormatterOptions)} ${new Date(
+            Number(user?.lastActiveAt)
+          ).toLocaleString("en-us", timeFormatterOptions)}`}</p>
+        )}
+        <Link
+          href={"/chat"}
+          className={cn(buttonVariants({ variant: "ghost" }), "mt-4")}
+        >
+          Close
+        </Link>
+      </div>
+    </section>
   );
 };
 
