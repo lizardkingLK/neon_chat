@@ -25,16 +25,6 @@ const deleteResponse = NextResponse.json({ success: true }, { status: 200 });
 
 // Deletes messages that are older than 24hrs
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json(
-      { message: "error. unauthorized" },
-      {
-        status: 401,
-      }
-    );
-  }
-
   const nonExpiredMessages = await prisma.message.findMany(queryFilter);
   if (!nonExpiredMessages) {
     return;
